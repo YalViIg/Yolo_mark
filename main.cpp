@@ -190,11 +190,10 @@ std::atomic<int> x_size, y_size;
 std::atomic<bool> draw_select, selected, undo;
 
 std::atomic<int> add_id_img;
-Rect prev_img_rect(0, 0, 50, 100);
-Rect next_img_rect(1280 - 50, 0, 50, 100);
+//Rect prev_img_rect(0, 0, 50, 100);
+//Rect next_img_rect(720 - 50, 0, 50, 100);
 
-
-void callback_mouse_click(int event, int x, int y, int flags, void* user_data)
+void callback_mouse_click( int event, int x, int y, int flags, void* user_data)
 {
     if (event == cv::EVENT_LBUTTONDBLCLK)
     {
@@ -205,11 +204,11 @@ void callback_mouse_click(int event, int x, int y, int flags, void* user_data)
         draw_select = true;
         selected = false;
         x_start = x;
-        y_start = y;
+        y_start = y;		
 
-        if (prev_img_rect.contains(Point2i(x, y))) add_id_img = -1;
-        else if (next_img_rect.contains(Point2i(x, y))) add_id_img = 1;
-        else add_id_img = 0;
+        //if (prev_img_rec.contains(Point2i(x, y))) add_id_img = -1;
+        //else if (next_img_rec.contains(Point2i(x, y))) add_id_img = 1;
+        //else add_id_img = 0;
         //std::cout << "cv::EVENT_LBUTTONDOWN \n";
     }
     else if (event == cv::EVENT_LBUTTONUP)
@@ -463,8 +462,13 @@ int main(int argc, char *argv[])
 		}
 		std::cout << "File loaded: " << synset_filename << std::endl;
 
-		Mat preview(Size(100, 100), CV_8UC3);
-		Mat full_image(Size(1280, 720), CV_8UC3);
+		Mat img = imread(jpg_filenames_path[0]);
+
+		Rect prev_img_rect(0, 0, 50, 100);
+		//Rect next_img_rect(720 - 50, 0, 50, 100);
+
+		Mat preview(Size(108 * img.cols / img.rows, 108), CV_8UC3);
+		Mat full_image(Size( 1080 * img.cols / img.rows, 1080), CV_8UC3); //* img.cols / img.rows
 		Mat frame(Size(full_image.cols, full_image.rows + preview.rows), CV_8UC3);
 
 		Rect full_rect_dst(Point2i(0, preview.rows), Size(frame.cols, frame.rows - preview.rows));
@@ -480,9 +484,9 @@ int main(int argc, char *argv[])
 
 		std::string const window_name = "Marking images";
 		namedWindow(window_name, WINDOW_NORMAL);
-		resizeWindow(window_name, 1280, 720);
+		resizeWindow(window_name, Size(frame.cols, frame.rows));
 		imshow(window_name, frame);
-		moveWindow(window_name, 0, 0);
+		//moveWindow(window_name, 0, 0);
 		setMouseCallback(window_name, callback_mouse_click);
 
 		bool next_by_click = false;
@@ -633,8 +637,8 @@ int main(int argc, char *argv[])
 
 				marks_changed = false;
 
-				rectangle(frame, prev_img_rect, Scalar(100, 100, 100), CV_FILLED);
-				rectangle(frame, next_img_rect, Scalar(100, 100, 100), CV_FILLED);
+				//rectangle(frame, prev_img_rect, Scalar(100, 100, 100), CV_FILLED);
+				//rectangle(frame, next_img_rect, Scalar(100, 100, 100), CV_FILLED);
 			}
 
 			trackbar_value = min(max(0, trackbar_value), (int)jpg_filenames_path.size() - 1);
@@ -708,8 +712,8 @@ int main(int argc, char *argv[])
 				char buff[100];
 				snprintf(buff, 100, "Abs: %d x %d    Rel: %.3f x %.3f", abs_x, abs_y, relative_center_x, relative_center_y);
 				//putText(full_image_roi, buff, Point2i(800, 20), FONT_HERSHEY_SIMPLEX, 0.7, Scalar(50, 10, 10), 3);
-				putText(full_image_roi, buff, Point2i(800, 20), FONT_HERSHEY_SIMPLEX, 0.7, Scalar(100, 50, 50), 2);
-				putText(full_image_roi, buff, Point2i(800, 20), FONT_HERSHEY_SIMPLEX, 0.7, Scalar(220, 120, 120), 1);
+				putText(full_image_roi, buff, Point2i(400, 20), FONT_HERSHEY_SIMPLEX, 0.7, Scalar(100, 50, 50), 2);
+				putText(full_image_roi, buff, Point2i(400, 20), FONT_HERSHEY_SIMPLEX, 0.7, Scalar(220, 120, 120), 1);
 			}
 			else
 			{
@@ -859,7 +863,7 @@ int main(int argc, char *argv[])
 
             if (next_by_click) {
                 putText(full_image_roi, "Mode: 1 mark per image (next by click)",
-                    Point2i(850, 20), FONT_HERSHEY_SIMPLEX, 0.6, Scalar(50, 170, 100), 2);
+                    Point2i(150, 20), FONT_HERSHEY_SIMPLEX, 0.6, Scalar(50, 170, 100), 2);
             }
 
 
@@ -893,21 +897,21 @@ int main(int argc, char *argv[])
 				Scalar prev_arrow_color(200, 150, 100);
 				Scalar next_arrow_color = prev_arrow_color;
 				if (prev_img_rect.contains(Point2i(x_end, y_end))) prev_arrow_color = Scalar(220, 190, 170);
-				if (next_img_rect.contains(Point2i(x_end, y_end))) next_arrow_color = Scalar(220, 190, 170);
+				//if (next_img_rect.contains(Point2i(x_end, y_end))) next_arrow_color = Scalar(220, 190, 170);
 
-				std::vector<Point> prev_triangle_pts = { Point(5, 50), Point(40, 90), Point(40, 10), Point(5, 50) };
-				Mat prev_roi = frame(prev_img_rect);
-				line(prev_roi, prev_triangle_pts[0], prev_triangle_pts[1], prev_arrow_color, 5);
-				line(prev_roi, prev_triangle_pts[1], prev_triangle_pts[2], prev_arrow_color, 5);
-				line(prev_roi, prev_triangle_pts[2], prev_triangle_pts[3], prev_arrow_color, 5);
-				line(prev_roi, prev_triangle_pts[3], prev_triangle_pts[0], prev_arrow_color, 5);
+				//std::vector<Point> prev_triangle_pts = { Point(5, 50), Point(40, 90), Point(40, 10), Point(5, 50) };
+				//Mat prev_roi = frame(prev_img_rect);
+				//line(prev_roi, prev_triangle_pts[0], prev_triangle_pts[1], prev_arrow_color, 5);
+				//line(prev_roi, prev_triangle_pts[1], prev_triangle_pts[2], prev_arrow_color, 5);
+				//line(prev_roi, prev_triangle_pts[2], prev_triangle_pts[3], prev_arrow_color, 5);
+				//line(prev_roi, prev_triangle_pts[3], prev_triangle_pts[0], prev_arrow_color, 5);
 
-				std::vector<Point> next_triangle_pts = { Point(10, 10), Point(10, 90), Point(45, 50), Point(10, 10) };
-				Mat next_roi = frame(next_img_rect);
-				line(next_roi, next_triangle_pts[0], next_triangle_pts[1], next_arrow_color, 5);
-				line(next_roi, next_triangle_pts[1], next_triangle_pts[2], next_arrow_color, 5);
-				line(next_roi, next_triangle_pts[2], next_triangle_pts[3], next_arrow_color, 5);
-				line(next_roi, next_triangle_pts[3], next_triangle_pts[0], next_arrow_color, 5);
+				//std::vector<Point> next_triangle_pts = { Point(10, 10), Point(10, 90), Point(45, 50), Point(10, 10) };
+				//Mat next_roi = frame(next_img_rect);
+				//line(next_roi, next_triangle_pts[0], next_triangle_pts[1], next_arrow_color, 5);
+				//line(next_roi, next_triangle_pts[1], next_triangle_pts[2], next_arrow_color, 5);
+				//line(next_roi, next_triangle_pts[2], next_triangle_pts[3], next_arrow_color, 5);
+				//line(next_roi, next_triangle_pts[3], next_triangle_pts[0], next_arrow_color, 5);
 			}
 
 			imshow(window_name, frame);
